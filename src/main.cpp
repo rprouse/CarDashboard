@@ -11,24 +11,19 @@ OBDReader obd;
 
 int consecutiveErrors = 0;
 unsigned long stateEntryTime = 0;
-bool screenDrawn = false;
 
 void enterState(AppState newState) {
     setState(newState);
     stateEntryTime = millis();
-    screenDrawn = false;
     if (newState == AppState::BT_CONNECTING || newState == AppState::RUNNING) {
         consecutiveErrors = 0;
     }
 }
 
 void handleBtConnecting() {
-    if (!screenDrawn) {
-        display.drawConnecting();
-        screenDrawn = true;
-    }
+    // Draw once before the blocking connect() call
+    display.drawConnecting();
     // SerialBT.connect() is BLOCKING (~10s)
-    // Screen already shows "CONNECTING..." before this call
     if (obd.connectBT()) {
         enterState(AppState::OBD_INIT);
     } else {
@@ -37,10 +32,8 @@ void handleBtConnecting() {
 }
 
 void handleObdInit() {
-    if (!screenDrawn) {
-        display.drawInitialising();
-        screenDrawn = true;
-    }
+    // Draw once before the blocking initELM() call
+    display.drawInitialising();
     // myELM327.begin() is BLOCKING (~5s timeout)
     if (obd.initELM()) {
         enterState(AppState::RUNNING);
@@ -87,9 +80,11 @@ void handleRunning() {
 }
 
 void handleError() {
-    if (!screenDrawn) {
+    // Redraw every frame for animations
+    static unsigned long lastErrorRedraw = 0;
+    if (millis() - lastErrorRedraw >= CFG_ANIM_INTERVAL_MS) {
         display.drawError("NO SIGNAL");
-        screenDrawn = true;
+        lastErrorRedraw = millis();
     }
     if (millis() - stateEntryTime >= CFG_RECONNECT_DELAY_MS) {
         enterState(AppState::BT_CONNECTING);
