@@ -17,7 +17,7 @@ No unit tests — this is embedded firmware tested on hardware.
 
 ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel level from an ELM327 Bluetooth Classic OBD2 adapter and displays it as a CRT-styled monochrome green bar with scanlines and a rounded bezel border.
 
-**State machine** drives the app through four states: `BT_CONNECTING → OBD_INIT → RUNNING → ERROR`, with each state reflected on the display. Transitions and the main loop live in `main.cpp`.
+**State machine** drives the app through four states: `BT_CONNECTING → OBD_INIT → RUNNING → ERROR`, with each state reflected on the display. Each state has a dedicated `handle*()` function in `main.cpp`; `loop()` dispatches via a switch. To add a new state: add it to the `AppState` enum, create a `handleNewState()` function, and add it to the switch.
 
 **Key modules:**
 
@@ -33,7 +33,7 @@ ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel lev
 - **ST7789 requires BGR colour order and inversion off.** If colours look wrong, check `TFT_RGB_ORDER` and `TFT_INVERSION_OFF` in build_flags.
 - **ELMduino is non-blocking** — calling `fuelLevel()` every loop iteration is correct; the library internally gates re-sends via `nb_rx_state`. Do NOT add a guard that prevents calling `fuelLevel()` while `ELM_GETTING_MSG`.
 - **Memory is tight** — BluetoothSerial uses ~140 KB RAM, 16-bit sprite uses ~150 KB. Total ~290 KB of 320 KB. Do not enable WiFi alongside BT Classic. If OOM, the display module falls back to 8-bit sprites automatically.
-- **Font 7 (7-segment) only supports digits and `: - .`** — render any other characters (like `%`) with a different font.
+- **Font 7 (7-segment) only supports digits and `: - .`** — not currently used, but if re-introduced, render other characters with a different font.
 - **`SerialBT.connect()` blocks for up to ~10 seconds.** Always render the status screen before calling it.
 - **CRT effect is a post-processing pass.** Every draw method must call `applyCrtEffect()` before `pushSprite()`. If you add a new screen state, follow the same pattern: draw content → `applyCrtEffect()` → `pushSprite()`. The method draws scanlines first, then the rounded border on top.
 - **Colours are RGB565** (16-bit: 5 red, 6 green, 5 blue). All colour constants in `config.h` use this format. To convert hex RGB to RGB565: `((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)`.
