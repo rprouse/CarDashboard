@@ -22,20 +22,85 @@ void enterState(AppState newState) {
     }
 }
 
+void handleBtConnecting() {
+    if (!screenDrawn) {
+        display.drawConnecting();
+        screenDrawn = true;
+    }
+    // SerialBT.connect() is BLOCKING (~10s)
+    // Screen already shows "CONNECTING..." before this call
+    if (obd.connectBT()) {
+        enterState(AppState::OBD_INIT);
+    } else {
+        delay(CFG_RECONNECT_DELAY_MS);
+    }
+}
+
+void handleObdInit() {
+    if (!screenDrawn) {
+        display.drawInitialising();
+        screenDrawn = true;
+    }
+    // myELM327.begin() is BLOCKING (~5s timeout)
+    if (obd.initELM()) {
+        enterState(AppState::RUNNING);
+    } else {
+        Serial.println("ELM327 init failed, reconnecting BT...");
+        enterState(AppState::BT_CONNECTING);
+    }
+}
+
+void handleRunning() {
+    if (!obd.isConnected()) {
+        Serial.println("BT disconnected");
+        enterState(AppState::ERROR);
+        return;
+    }
+
+    PollResult result = obd.poll();
+
+    switch (result) {
+        case PollResult::SUCCESS:
+            consecutiveErrors = 0;
+            display.drawGauge(obd.getFuelLevel());
+            break;
+
+        case PollResult::ERROR:
+            consecutiveErrors++;
+            Serial.print("Consecutive errors: ");
+            Serial.println(consecutiveErrors);
+            if (consecutiveErrors >= CFG_CONSECUTIVE_ERROR_THRESHOLD) {
+                enterState(AppState::ERROR);
+            }
+            break;
+
+        case PollResult::WAITING:
+            break;
+    }
+}
+
+void handleError() {
+    if (!screenDrawn) {
+        display.drawError("NO SIGNAL");
+        screenDrawn = true;
+    }
+    if (millis() - stateEntryTime >= CFG_RECONNECT_DELAY_MS) {
+        enterState(AppState::BT_CONNECTING);
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     Serial.println("FuelGauge starting...");
 
-    // Init display
     tft.init();
-    tft.setRotation(1);  // landscape
-    digitalWrite(TFT_BL, HIGH);  // backlight on (defined in setup header)
+    tft.setRotation(1);
+    digitalWrite(TFT_BL, HIGH);
     pinMode(TFT_BL, OUTPUT);
 
     display.begin(tft);
     display.drawConnecting();
 
-    // Init Bluetooth
     obd.beginBluetooth();
 
     enterState(AppState::BT_CONNECTING);
@@ -43,84 +108,9 @@ void setup() {
 
 void loop() {
     switch (getState()) {
-
-        case AppState::BT_CONNECTING: {
-            if (!screenDrawn) {
-                display.drawConnecting();
-                screenDrawn = true;
-            }
-            // SerialBT.connect() is BLOCKING (~10s)
-            // Screen already shows "CONNECTING..." before this call
-            if (obd.connectBT()) {
-                enterState(AppState::OBD_INIT);
-            } else {
-                // Wait before retrying
-                delay(CFG_RECONNECT_DELAY_MS);
-                // Note: delay() is acceptable here because we're stuck
-                // waiting for BT anyway, and the screen already shows
-                // the right status
-            }
-            break;
-        }
-
-        case AppState::OBD_INIT: {
-            if (!screenDrawn) {
-                display.drawInitialising();
-                screenDrawn = true;
-            }
-            // myELM327.begin() is BLOCKING (~5s timeout)
-            if (obd.initELM()) {
-                enterState(AppState::RUNNING);
-            } else {
-                Serial.println("ELM327 init failed, reconnecting BT...");
-                enterState(AppState::BT_CONNECTING);
-            }
-            break;
-        }
-
-        case AppState::RUNNING: {
-            // Check BT still connected
-            if (!obd.isConnected()) {
-                Serial.println("BT disconnected");
-                enterState(AppState::ERROR);
-                break;
-            }
-
-            PollResult result = obd.poll();
-
-            switch (result) {
-                case PollResult::SUCCESS:
-                    consecutiveErrors = 0;
-                    display.drawGauge(obd.getFuelLevel());
-                    break;
-
-                case PollResult::ERROR:
-                    consecutiveErrors++;
-                    Serial.print("Consecutive errors: ");
-                    Serial.println(consecutiveErrors);
-                    if (consecutiveErrors >= CFG_CONSECUTIVE_ERROR_THRESHOLD) {
-                        enterState(AppState::ERROR);
-                    }
-                    break;
-
-                case PollResult::WAITING:
-                    // First draw — show gauge with placeholder or just wait
-                    // On first successful poll it will update
-                    break;
-            }
-            break;
-        }
-
-        case AppState::ERROR: {
-            if (!screenDrawn) {
-                display.drawError("NO SIGNAL");
-                screenDrawn = true;
-            }
-            // Wait, then retry from BT_CONNECTING
-            if (millis() - stateEntryTime >= CFG_RECONNECT_DELAY_MS) {
-                enterState(AppState::BT_CONNECTING);
-            }
-            break;
-        }
+        case AppState::BT_CONNECTING: handleBtConnecting(); break;
+        case AppState::OBD_INIT:      handleObdInit();      break;
+        case AppState::RUNNING:       handleRunning();       break;
+        case AppState::ERROR:         handleError();         break;
     }
 }
