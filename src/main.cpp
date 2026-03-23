@@ -77,6 +77,13 @@ void handleRunning() {
         case PollResult::WAITING:
             break;
     }
+
+    // Redraw periodically for animations (pulse, flicker)
+    static unsigned long lastRedraw = 0;
+    if (obd.getFuelLevel() >= 0 && millis() - lastRedraw >= CFG_ANIM_INTERVAL_MS) {
+        display.drawGauge(obd.getFuelLevel());
+        lastRedraw = millis();
+    }
 }
 
 void handleError() {
