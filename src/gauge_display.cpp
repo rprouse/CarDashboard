@@ -79,7 +79,7 @@ void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    _sprite->setTextColor(CFG_COLOR_CRT_WARN);
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString(msg, CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
     applyCrtEffect();
