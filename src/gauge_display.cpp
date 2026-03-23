@@ -121,11 +121,6 @@ void GaugeDisplay::drawHudChrome() {
     _sprite->drawString("SYS://FUEL.MONITOR", CFG_HUD_INSET, CFG_HUD_HEADER_Y);
     _sprite->setTextDatum(MC_DATUM);
 
-    // Horizontal rules
-    _sprite->drawFastHLine(CFG_HUD_INSET, CFG_HUD_RULE_UPPER_Y,
-                           CFG_SCREEN_W - 2 * CFG_HUD_INSET, CFG_COLOR_CRT_DIM);
-    _sprite->drawFastHLine(CFG_HUD_INSET, CFG_HUD_RULE_LOWER_Y,
-                           CFG_SCREEN_W - 2 * CFG_HUD_INSET, CFG_COLOR_CRT_DIM);
 }
 
 uint16_t GaugeDisplay::dimColour(uint16_t colour, float brightness) {
