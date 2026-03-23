@@ -143,14 +143,5 @@ void GaugeDisplay::applyCrtEffect() {
     for (int y = 0; y < CFG_SCREEN_H; y += CFG_SCANLINE_SPACING) {
         _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_SCANLINE);
     }
-
-    // Glitch: 1-in-N chance of drawing bright glitch lines
-    if (random(0, CFG_GLITCH_CHANCE) == 0) {
-        int glitchY = random(20, CFG_SCREEN_H - 20);
-        int glitchH = random(2, 6);
-        for (int y = glitchY; y < glitchY + glitchH && y < CFG_SCREEN_H; y++) {
-            _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_CRT_DIM);
-        }
-    }
 }
 
