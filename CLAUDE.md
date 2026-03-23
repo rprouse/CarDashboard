@@ -15,7 +15,7 @@ No unit tests — this is embedded firmware tested on hardware.
 
 ## Architecture
 
-ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel level from an ELM327 Bluetooth Classic OBD2 adapter and displays it as a CRT-styled monochrome green bar with scanlines and a rounded bezel border.
+ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel level from an ELM327 Bluetooth Classic OBD2 adapter and displays it as a CRT-styled monochrome green bar with scanlines, a pulsing glow, HUD header, and a low-fuel danger flash.
 
 **State machine** drives the app through four states: `BT_CONNECTING → OBD_INIT → RUNNING → ERROR`, with each state reflected on the display. Each state has a dedicated `handle*()` function in `main.cpp`; `loop()` dispatches via a switch. To add a new state: add it to the `AppState` enum, create a `handleNewState()` function, and add it to the switch.
 
@@ -23,7 +23,7 @@ ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel lev
 
 - `config.h` — All tuneable constants (BT name/PIN, poll interval, bar geometry, colours). Application config only; TFT_eSPI hardware config lives in `platformio.ini` build_flags.
 - `state_machine.h/cpp` — `AppState` enum and free functions (`setState`, `getState`, `getStateName`). Pure state logic, no I/O.
-- `gauge_display.h/cpp` — `GaugeDisplay` class. All rendering goes through a `TFT_eSprite` (full-screen sprite pushed in one shot to avoid flicker). A private `applyCrtEffect()` method draws scanlines and a rounded border over the sprite content before every push. Falls back to 8-bit colour depth if 16-bit sprite allocation fails (OOM).
+- `gauge_display.h/cpp` — `GaugeDisplay` class. All rendering goes through a `TFT_eSprite` (full-screen sprite pushed in one shot to avoid flicker). Private helpers: `drawHudChrome()` renders the "SYS://FUEL.MONITOR" header, `applyCrtEffect()` draws scanlines, `dimColour()` scales RGB565 brightness for the pulsing glow and danger flash. Falls back to 8-bit colour depth if 16-bit sprite allocation fails (OOM).
 - `obd_reader.h/cpp` — `OBDReader` class wrapping `BluetoothSerial` + `ELMduino`. The `poll()` method is non-blocking (returns `PollResult::WAITING` while ELMduino is still receiving). `connectBT()` and `initELM()` are blocking.
 
 ## Critical Constraints
@@ -35,5 +35,6 @@ ESP32 CYD (Cheap Yellow Display, ESP32-2432S028R) fuel gauge that reads fuel lev
 - **Memory is tight** — BluetoothSerial uses ~140 KB RAM, 16-bit sprite uses ~150 KB. Total ~290 KB of 320 KB. Do not enable WiFi alongside BT Classic. If OOM, the display module falls back to 8-bit sprites automatically.
 - **Font 7 (7-segment) only supports digits and `: - .`** — not currently used, but if re-introduced, render other characters with a different font.
 - **`SerialBT.connect()` blocks for up to ~10 seconds.** Always render the status screen before calling it.
-- **CRT effect is a post-processing pass.** Every draw method must call `applyCrtEffect()` before `pushSprite()`. If you add a new screen state, follow the same pattern: draw content → `applyCrtEffect()` → `pushSprite()`. The method draws scanlines first, then the rounded border on top.
+- **Rendering pipeline.** Every draw method follows: `fillSprite` → `drawHudChrome()` → content → `applyCrtEffect()` → `pushSprite()`. If you add a new screen state, follow this exact order.
+- **RUNNING and ERROR states redraw every 50ms** (`CFG_ANIM_INTERVAL_MS`) for pulsing glow and scanline animation. Do not add a `screenDrawn` guard that prevents redraws — animations require continuous rendering.
 - **Colours are RGB565** (16-bit: 5 red, 6 green, 5 blue). All colour constants in `config.h` use this format. To convert hex RGB to RGB565: `((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)`.
