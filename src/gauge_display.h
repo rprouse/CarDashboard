@@ -11,8 +11,8 @@ public:
     void drawError(const char* msg);
 
 private:
+    void applyCrtEffect();
+
     TFT_eSprite* _sprite = nullptr;
     TFT_eSPI*    _tft    = nullptr;
-
-    uint16_t fuelColour(float pct);
 };

@@ -25,9 +25,10 @@ void GaugeDisplay::drawConnecting() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    _sprite->setTextColor(TFT_WHITE);
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("CONNECTING...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
+    applyCrtEffect();
     _sprite->pushSprite(0, 0);
 }
 
@@ -35,9 +36,10 @@ void GaugeDisplay::drawInitialising() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    _sprite->setTextColor(TFT_WHITE);
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("INITIALISING OBD...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
+    applyCrtEffect();
     _sprite->pushSprite(0, 0);
 }
 
@@ -51,31 +53,35 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
     _sprite->fillSprite(TFT_BLACK);
 
     // Outer bar border
-    _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H, TFT_WHITE);
+    _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H, CFG_COLOR_CRT_DIM);
 
     // Fill bar
     int fillW = (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * fuelPercent / 100.0f);
-    uint16_t colour = fuelColour(fuelPercent);
     _sprite->fillRect(CFG_BAR_X + CFG_BAR_PADDING,
                       CFG_BAR_Y + CFG_BAR_PADDING,
                       fillW,
                       CFG_BAR_H - 2 * CFG_BAR_PADDING,
-                      colour);
+                      CFG_COLOR_BAR);
 
-    // Percentage text below bar
-    _sprite->setTextColor(TFT_WHITE);
+    // "Fuel:" label + percentage below bar
+    // Font 7 (7-segment) only supports digits and : - .
+    // Draw "Fuel: " in Font 4, then the number in Font 7, then "%" in Font 4
+    _sprite->setTextColor(CFG_COLOR_BAR);
+    _sprite->setTextDatum(MR_DATUM);
+    _sprite->setTextFont(4);
+    int labelX = CFG_SCREEN_W / 2 - 40;
+    _sprite->drawString("Fuel: ", labelX, 160);
+    _sprite->setTextFont(7);
     char numBuf[8];
     snprintf(numBuf, sizeof(numBuf), "%.0f", fuelPercent);
-    // Font 7 (7-segment) only supports digits and : - .
-    // Draw the number in Font 7, then "%" in Font 4 beside it
-    _sprite->setTextDatum(MR_DATUM);  // right-align number
-    _sprite->setTextFont(7);
-    int numW = _sprite->drawString(numBuf, CFG_SCREEN_W / 2 + 10, 160);
-    _sprite->setTextDatum(ML_DATUM);  // left-align percent sign
+    int numRight = CFG_SCREEN_W / 2 + 40;
+    _sprite->drawString(numBuf, numRight, 160);
+    _sprite->setTextDatum(ML_DATUM);
     _sprite->setTextFont(4);
-    _sprite->drawString("%", CFG_SCREEN_W / 2 + 10, 160);
-    _sprite->setTextDatum(MC_DATUM);  // restore default
+    _sprite->drawString("%", numRight, 160);
+    _sprite->setTextDatum(MC_DATUM);
 
+    applyCrtEffect();
     _sprite->pushSprite(0, 0);
 }
 
@@ -83,14 +89,26 @@ void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    _sprite->setTextColor(TFT_RED);
+    _sprite->setTextColor(CFG_COLOR_CRT_WARN);
     _sprite->setTextFont(4);
     _sprite->drawString(msg, CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
+    applyCrtEffect();
     _sprite->pushSprite(0, 0);
 }
 
-uint16_t GaugeDisplay::fuelColour(float pct) {
-    if (pct > CFG_THRESH_GREEN)  return CFG_COLOR_GREEN;
-    if (pct > CFG_THRESH_YELLOW) return CFG_COLOR_YELLOW;
-    return CFG_COLOR_RED;
+void GaugeDisplay::applyCrtEffect() {
+    // Scanlines: draw a dark horizontal line every Nth row
+    for (int y = 0; y < CFG_SCREEN_H; y += CFG_SCANLINE_SPACING) {
+        _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_SCANLINE);
+    }
+
+    // Rounded border: concentric rounded rects in black
+    for (int i = 0; i < CFG_CRT_BORDER_W; i++) {
+        _sprite->drawRoundRect(i, i,
+                               CFG_SCREEN_W - 2 * i,
+                               CFG_SCREEN_H - 2 * i,
+                               CFG_CRT_CORNER_RADIUS - i,
+                               TFT_BLACK);
+    }
 }
+
