@@ -92,7 +92,23 @@ void GaugeDisplay::applyCrtEffect() {
         _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_SCANLINE);
     }
 
-    // Rounded border: concentric rounded rects in black
+    // Black out the four corners so no scanlines leak outside the
+    // rounded border. Fill corner squares, then the rounded border
+    // carves the curved edge back out.
+    int r = CFG_CRT_CORNER_RADIUS;
+    // Top-left
+    _sprite->fillRect(0, 0, r, r, TFT_BLACK);
+    // Top-right
+    _sprite->fillRect(CFG_SCREEN_W - r, 0, r, r, TFT_BLACK);
+    // Bottom-left
+    _sprite->fillRect(0, CFG_SCREEN_H - r, r, r, TFT_BLACK);
+    // Bottom-right
+    _sprite->fillRect(CFG_SCREEN_W - r, CFG_SCREEN_H - r, r, r, TFT_BLACK);
+
+    // Restore the rounded corner curves by filling just the inner
+    // corner arcs back with the scanline pattern — actually, just
+    // draw the rounded border on top. The corners stay black, and
+    // the border frames the content area.
     for (int i = 0; i < CFG_CRT_BORDER_W; i++) {
         _sprite->drawRoundRect(i, i,
                                CFG_SCREEN_W - 2 * i,
