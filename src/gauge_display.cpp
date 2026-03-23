@@ -1,5 +1,6 @@
 #include "gauge_display.h"
 #include "config.h"
+#include <math.h>
 
 void GaugeDisplay::begin(TFT_eSPI& tft) {
     _tft = &tft;
@@ -55,8 +56,22 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
     _sprite->fillSprite(TFT_BLACK);
     drawHudChrome();
 
+    // Pulsing glow: brightness oscillates 0.6–1.0 on a sine wave
+    float pulse = 0.6f + 0.4f * sin(millis() * 2.0f * 3.14159f / CFG_PULSE_PERIOD_MS);
+    uint16_t barColour = dimColour(CFG_COLOR_BAR, pulse);
+
+    // Low fuel danger flash overrides pulse colour
+    bool dangerFlash = false;
+    if (fuelPercent < CFG_THRESH_LOW_FUEL) {
+        dangerFlash = ((millis() / CFG_DANGER_BLINK_MS) % 2) == 1;
+        if (dangerFlash) {
+            barColour = CFG_COLOR_DANGER;
+        }
+    }
+
     // Outer bar border
-    _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H, CFG_COLOR_CRT_DIM);
+    _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H,
+                      dangerFlash ? CFG_COLOR_DANGER : CFG_COLOR_CRT_DIM);
 
     // Fill bar
     int fillW = (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * fuelPercent / 100.0f);
@@ -64,10 +79,18 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
                       CFG_BAR_Y + CFG_BAR_PADDING,
                       fillW,
                       CFG_BAR_H - 2 * CFG_BAR_PADDING,
-                      CFG_COLOR_BAR);
+                      barColour);
+
+    // Hash marks at 25%, 50%, 75%
+    for (int pct = 25; pct <= 75; pct += 25) {
+        int markX = CFG_BAR_X + CFG_BAR_PADDING
+                    + (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * pct / 100.0f);
+        _sprite->drawFastVLine(markX, CFG_BAR_Y + CFG_BAR_PADDING,
+                               CFG_BAR_H - 2 * CFG_BAR_PADDING, CFG_COLOR_CRT_DIM);
+    }
 
     // "Fuel: XX%" label below bar — all Font 4
-    _sprite->setTextColor(CFG_COLOR_BAR);
+    _sprite->setTextColor(dangerFlash ? CFG_COLOR_DANGER : CFG_COLOR_BAR);
     _sprite->setTextDatum(MC_DATUM);
     _sprite->setTextFont(4);
     char labelBuf[16];
