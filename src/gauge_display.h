@@ -12,6 +12,8 @@ public:
 
 private:
     void applyCrtEffect();
+    void drawHudChrome();
+    uint16_t dimColour(uint16_t colour, float brightness);
 
     TFT_eSprite* _sprite = nullptr;
     TFT_eSPI*    _tft    = nullptr;

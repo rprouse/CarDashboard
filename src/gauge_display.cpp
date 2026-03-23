@@ -25,6 +25,7 @@ void GaugeDisplay::drawConnecting() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
+    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("CONNECTING...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
@@ -36,6 +37,7 @@ void GaugeDisplay::drawInitialising() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
+    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("INITIALISING OBD...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
@@ -51,6 +53,7 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
     if (fuelPercent > 100.0f) fuelPercent = 100.0f;
 
     _sprite->fillSprite(TFT_BLACK);
+    drawHudChrome();
 
     // Outer bar border
     _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H, CFG_COLOR_CRT_DIM);
@@ -79,11 +82,37 @@ void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
+    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString(msg, CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
     applyCrtEffect();
     _sprite->pushSprite(0, 0);
+}
+
+void GaugeDisplay::drawHudChrome() {
+    // Header
+    _sprite->setTextColor(CFG_COLOR_CRT_DIM);
+    _sprite->setTextDatum(TL_DATUM);
+    _sprite->setTextFont(2);
+    _sprite->drawString("SYS://FUEL.MONITOR", CFG_HUD_INSET, CFG_HUD_HEADER_Y);
+    _sprite->setTextDatum(MC_DATUM);
+
+    // Horizontal rules
+    _sprite->drawFastHLine(CFG_HUD_INSET, CFG_HUD_RULE_UPPER_Y,
+                           CFG_SCREEN_W - 2 * CFG_HUD_INSET, CFG_COLOR_CRT_DIM);
+    _sprite->drawFastHLine(CFG_HUD_INSET, CFG_HUD_RULE_LOWER_Y,
+                           CFG_SCREEN_W - 2 * CFG_HUD_INSET, CFG_COLOR_CRT_DIM);
+}
+
+uint16_t GaugeDisplay::dimColour(uint16_t colour, float brightness) {
+    uint8_t r = (colour >> 11) & 0x1F;
+    uint8_t g = (colour >> 5) & 0x3F;
+    uint8_t b = colour & 0x1F;
+    r = (uint8_t)(r * brightness);
+    g = (uint8_t)(g * brightness);
+    b = (uint8_t)(b * brightness);
+    return (r << 11) | (g << 5) | b;
 }
 
 void GaugeDisplay::applyCrtEffect() {

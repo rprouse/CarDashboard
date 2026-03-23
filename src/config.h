@@ -36,3 +36,19 @@ constexpr uint16_t CFG_COLOR_SCANLINE    = 0x01A0;  // very dark green scanline
 constexpr int CFG_CRT_BORDER_W      = 8;    // border thickness (pixels)
 constexpr int CFG_CRT_CORNER_RADIUS = 20;   // rounded corner radius
 constexpr int CFG_SCANLINE_SPACING  = 3;    // draw scanline every Nth row
+
+// ── HUD chrome ──────────────────────────────────────────────
+constexpr int CFG_HUD_INSET        = 12;   // content inset from screen edge
+constexpr int CFG_HUD_HEADER_Y     = 14;   // header text Y position
+constexpr int CFG_HUD_RULE_UPPER_Y = 28;   // horizontal rule below header
+constexpr int CFG_HUD_RULE_LOWER_Y = 148;  // horizontal rule above fuel label
+
+// ── Low fuel warning ────────────────────────────────────────
+constexpr int      CFG_THRESH_LOW_FUEL   = 25;    // below this: danger flash
+constexpr uint16_t CFG_COLOR_DANGER      = 0xC000; // dim red for low fuel flash
+constexpr unsigned long CFG_DANGER_BLINK_MS = 500; // blink period
+
+// ── Animation ───────────────────────────────────────────────
+constexpr unsigned long CFG_PULSE_PERIOD_MS = 2000; // bar glow cycle
+constexpr int CFG_GLITCH_CHANCE     = 15;           // 1 in N frames triggers glitch
+constexpr unsigned long CFG_ANIM_INTERVAL_MS = 50;  // redraw interval for animations
