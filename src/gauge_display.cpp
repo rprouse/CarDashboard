@@ -64,10 +64,17 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
 
     // Percentage text below bar
     _sprite->setTextColor(TFT_WHITE);
+    char numBuf[8];
+    snprintf(numBuf, sizeof(numBuf), "%.0f", fuelPercent);
+    // Font 7 (7-segment) only supports digits and : - .
+    // Draw the number in Font 7, then "%" in Font 4 beside it
+    _sprite->setTextDatum(MR_DATUM);  // right-align number
     _sprite->setTextFont(7);
-    char buffer[8];
-    snprintf(buffer, sizeof(buffer), "%.0f%%", fuelPercent);
-    _sprite->drawString(buffer, CFG_SCREEN_W / 2, 160);
+    int numW = _sprite->drawString(numBuf, CFG_SCREEN_W / 2 + 10, 160);
+    _sprite->setTextDatum(ML_DATUM);  // left-align percent sign
+    _sprite->setTextFont(4);
+    _sprite->drawString("%", CFG_SCREEN_W / 2 + 10, 160);
+    _sprite->setTextDatum(MC_DATUM);  // restore default
 
     _sprite->pushSprite(0, 0);
 }
