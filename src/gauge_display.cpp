@@ -139,9 +139,22 @@ uint16_t GaugeDisplay::dimColour(uint16_t colour, float brightness) {
 }
 
 void GaugeDisplay::applyCrtEffect() {
-    // Scanlines: draw a dark horizontal line every Nth row
+    // Flickering scanlines: random intensity per line
+    uint16_t scanColours[] = { CFG_COLOR_SCANLINE,
+                               dimColour(CFG_COLOR_SCANLINE, 0.5f),
+                               dimColour(CFG_COLOR_SCANLINE, 1.5f) };
     for (int y = 0; y < CFG_SCREEN_H; y += CFG_SCANLINE_SPACING) {
-        _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_SCANLINE);
+        _sprite->drawFastHLine(0, y, CFG_SCREEN_W,
+                               scanColours[random(0, 3)]);
+    }
+
+    // Glitch: 1-in-N chance of drawing bright glitch lines
+    if (random(0, CFG_GLITCH_CHANCE) == 0) {
+        int glitchY = random(20, CFG_SCREEN_H - 20);
+        int glitchH = random(2, 6);
+        for (int y = glitchY; y < glitchY + glitchH && y < CFG_SCREEN_H; y++) {
+            _sprite->drawFastHLine(0, y, CFG_SCREEN_W, CFG_COLOR_CRT_DIM);
+        }
     }
 }
 
