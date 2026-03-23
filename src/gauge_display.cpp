@@ -63,23 +63,13 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
                       CFG_BAR_H - 2 * CFG_BAR_PADDING,
                       CFG_COLOR_BAR);
 
-    // "Fuel:" label + percentage below bar
-    // Font 7 (7-segment) only supports digits and : - .
-    // Draw "Fuel: " in Font 4, then the number in Font 7, then "%" in Font 4
+    // "Fuel: XX%" label below bar — all Font 4
     _sprite->setTextColor(CFG_COLOR_BAR);
-    _sprite->setTextDatum(MR_DATUM);
-    _sprite->setTextFont(4);
-    int labelX = CFG_SCREEN_W / 2 - 40;
-    _sprite->drawString("Fuel: ", labelX, 160);
-    _sprite->setTextFont(7);
-    char numBuf[8];
-    snprintf(numBuf, sizeof(numBuf), "%.0f", fuelPercent);
-    int numRight = CFG_SCREEN_W / 2 + 40;
-    _sprite->drawString(numBuf, numRight, 160);
-    _sprite->setTextDatum(ML_DATUM);
-    _sprite->setTextFont(4);
-    _sprite->drawString("%", numRight, 160);
     _sprite->setTextDatum(MC_DATUM);
+    _sprite->setTextFont(4);
+    char labelBuf[16];
+    snprintf(labelBuf, sizeof(labelBuf), "Fuel: %.0f%%", fuelPercent);
+    _sprite->drawString(labelBuf, CFG_SCREEN_W / 2, 160);
 
     applyCrtEffect();
     _sprite->pushSprite(0, 0);
