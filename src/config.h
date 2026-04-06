@@ -17,12 +17,13 @@ constexpr int CFG_CONSECUTIVE_ERROR_THRESHOLD = 3;
 constexpr int CFG_SCREEN_W = 320;
 constexpr int CFG_SCREEN_H = 240;
 
-// ── Fuel bar geometry (pixels) ──────────────────────────────
-constexpr int CFG_BAR_X       = 28;   // was 20, shifted right by border
-constexpr int CFG_BAR_Y       = 75;   // was 70, shifted down slightly
-constexpr int CFG_BAR_W       = 264;  // was 280, narrowed by 2*border
-constexpr int CFG_BAR_H       = 60;
+// ── Gauge geometry (pixels) ──────────────────────────────
+constexpr int CFG_BAR_X       = 28;
+constexpr int CFG_BAR_W       = 264;
+constexpr int CFG_BAR_H       = 26;
 constexpr int CFG_BAR_PADDING = 2;   // border padding for inner fill
+
+constexpr int CFG_FUELBAR_Y   = 0;
 
 // ── Colours (RGB565) ────────────────────────────────────────
 constexpr uint16_t CFG_COLOR_CRT_GREEN = 0x37E6;  // #33FF33 — CRT phosphor green
@@ -44,7 +45,7 @@ constexpr int CFG_HUD_RULE_UPPER_Y = 28;   // horizontal rule below header
 constexpr int CFG_HUD_RULE_LOWER_Y = 148;  // horizontal rule above fuel label
 
 // ── Low fuel warning ────────────────────────────────────────
-constexpr int      CFG_THRESH_LOW_FUEL   = 25;    // below this: danger flash
+constexpr int      CFG_THRESH_LOW_FUEL   = 20;    // below this: danger flash
 constexpr uint16_t CFG_COLOR_DANGER      = 0xC000; // dim red for low fuel flash
 constexpr unsigned long CFG_DANGER_BLINK_MS = 500; // blink period
 

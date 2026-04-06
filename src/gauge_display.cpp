@@ -26,7 +26,6 @@ void GaugeDisplay::drawConnecting() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("CONNECTING...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
@@ -38,7 +37,6 @@ void GaugeDisplay::drawInitialising() {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString("INITIALISING OBD...", CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
@@ -46,37 +44,36 @@ void GaugeDisplay::drawInitialising() {
     _sprite->pushSprite(0, 0);
 }
 
-void GaugeDisplay::drawGauge(float fuelPercent) {
-    if (!_sprite) return;
+int32_t GaugeDisplay::drawGauge(float percent, int32_t y) {
+    if (!_sprite) return y;
 
     // Clamp to 0-100
-    if (fuelPercent < 0.0f)   fuelPercent = 0.0f;
-    if (fuelPercent > 100.0f) fuelPercent = 100.0f;
+    if (percent < 0.0f)   percent = 0.0f;
+    if (percent > 100.0f) percent = 100.0f;
 
     _sprite->fillSprite(TFT_BLACK);
-    drawHudChrome();
 
-    // Pulsing glow: brightness oscillates 0.6–1.0 on a sine wave
-    float pulse = 0.6f + 0.4f * sin(millis() * 2.0f * 3.14159f / CFG_PULSE_PERIOD_MS);
-    uint16_t barColour = dimColour(CFG_COLOR_BAR, pulse);
+    uint16_t barColour = CFG_COLOR_BAR;
 
     // Low fuel danger flash overrides pulse colour
     bool dangerFlash = false;
-    if (fuelPercent < CFG_THRESH_LOW_FUEL) {
-        dangerFlash = ((millis() / CFG_DANGER_BLINK_MS) % 2) == 1;
-        if (dangerFlash) {
-            barColour = CFG_COLOR_DANGER;
-        }
+    if (percent < CFG_THRESH_LOW_FUEL) {
+      dangerFlash = ((millis() / CFG_DANGER_BLINK_MS) % 2) == 1;
+      if (dangerFlash) {
+        barColour = CFG_COLOR_DANGER;
+      }
     }
 
+    y += 4; // Top Border padding
+
     // Outer bar border
-    _sprite->drawRect(CFG_BAR_X, CFG_BAR_Y, CFG_BAR_W, CFG_BAR_H,
+    _sprite->drawRect(CFG_BAR_X, y, CFG_BAR_W, CFG_BAR_H,
                       dangerFlash ? CFG_COLOR_DANGER : CFG_COLOR_CRT_DIM);
 
     // Fill bar
-    int fillW = (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * fuelPercent / 100.0f);
+    int fillW = (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * percent / 100.0f);
     _sprite->fillRect(CFG_BAR_X + CFG_BAR_PADDING,
-                      CFG_BAR_Y + CFG_BAR_PADDING,
+                      y + CFG_BAR_PADDING,
                       fillW,
                       CFG_BAR_H - 2 * CFG_BAR_PADDING,
                       barColour);
@@ -85,52 +82,35 @@ void GaugeDisplay::drawGauge(float fuelPercent) {
     for (int pct = 25; pct <= 75; pct += 25) {
         int markX = CFG_BAR_X + CFG_BAR_PADDING
                     + (int)((CFG_BAR_W - 2 * CFG_BAR_PADDING) * pct / 100.0f);
-        _sprite->drawFastVLine(markX, CFG_BAR_Y + CFG_BAR_PADDING,
+        _sprite->drawFastVLine(markX, y + CFG_BAR_PADDING,
                                CFG_BAR_H - 2 * CFG_BAR_PADDING, CFG_COLOR_CRT_DIM);
     }
 
+    y += CFG_BAR_H + 4;
+
     // "Fuel: XX%" label below bar — all Font 4
     _sprite->setTextColor(dangerFlash ? CFG_COLOR_DANGER : CFG_COLOR_BAR);
-    _sprite->setTextDatum(MC_DATUM);
+    _sprite->setTextDatum(TL_DATUM);
     _sprite->setTextFont(4);
-    char labelBuf[16];
-    snprintf(labelBuf, sizeof(labelBuf), "Fuel: %.0f%%", fuelPercent);
-    _sprite->drawString(labelBuf, CFG_SCREEN_W / 2, 160);
+    char labelBuf[18];
+    snprintf(labelBuf, sizeof(labelBuf), "SYS://FUEL: %.0f%%", percent);
+    _sprite->drawString(labelBuf, CFG_BAR_X, y);
 
     applyCrtEffect();
     _sprite->pushSprite(0, 0);
+
+    return y + _sprite->fontHeight() + 4; // Return Y position below label for next element
 }
 
 void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
     _sprite->fillSprite(TFT_BLACK);
-    drawHudChrome();
     _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(4);
     _sprite->drawString(msg, CFG_SCREEN_W / 2, CFG_SCREEN_H / 2);
     applyCrtEffect();
     _sprite->pushSprite(0, 0);
-}
-
-void GaugeDisplay::drawHudChrome() {
-    // Header
-    _sprite->setTextColor(CFG_COLOR_CRT_DIM);
-    _sprite->setTextDatum(TL_DATUM);
-    _sprite->setTextFont(2);
-    _sprite->drawString("SYS://FUEL.MONITOR", CFG_HUD_INSET, CFG_HUD_HEADER_Y);
-    _sprite->setTextDatum(MC_DATUM);
-
-}
-
-uint16_t GaugeDisplay::dimColour(uint16_t colour, float brightness) {
-    uint8_t r = (colour >> 11) & 0x1F;
-    uint8_t g = (colour >> 5) & 0x3F;
-    uint8_t b = colour & 0x1F;
-    r = (uint8_t)(r * brightness);
-    g = (uint8_t)(g * brightness);
-    b = (uint8_t)(b * brightness);
-    return (r << 11) | (g << 5) | b;
 }
 
 void GaugeDisplay::applyCrtEffect() {
