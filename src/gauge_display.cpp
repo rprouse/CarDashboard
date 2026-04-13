@@ -169,7 +169,7 @@ int32_t GaugeDisplay::drawVoltage(float volts, int32_t y) {
     _sprite->setTextDatum(TL_DATUM);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "VOLT://%.1fV", volts);
+    snprintf(buf, sizeof(buf), "%.1fV", volts);
     _sprite->drawString(buf, CFG_BAR_X, y);
 
     return y + _sprite->fontHeight() + 4;
@@ -184,7 +184,7 @@ int32_t GaugeDisplay::drawCoolant(int tempC, int32_t y) {
     _sprite->setTextDatum(TR_DATUM);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "TEMP://%d\xB0""C", tempC);
+    snprintf(buf, sizeof(buf), "%d\xB0""C", tempC);
     _sprite->drawString(buf, CFG_SCREEN_W - CFG_BAR_X, y);
 
     return y + _sprite->fontHeight() + 4;
