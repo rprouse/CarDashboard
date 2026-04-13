@@ -108,6 +108,58 @@ int32_t GaugeDisplay::drawGauge(float percent, int32_t y) {
     return y + _sprite->fontHeight() + 4; // Return Y position below label for next element
 }
 
+int32_t GaugeDisplay::drawSpeed(int kph, int32_t y) {
+    if (!_sprite) return y;
+
+    // Clamp to 0-999
+    if (kph < 0)   kph = 0;
+    if (kph > 999) kph = 999;
+
+    // Format speed with leading zeros
+    char speedBuf[4];
+    snprintf(speedBuf, sizeof(speedBuf), "%03d", kph);
+
+    // Draw speed digits in large 7-segment font
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    _sprite->setTextSize(CFG_SPEED_FONT_SIZE);
+    _sprite->setTextFont(CFG_SPEED_FONT);
+    _sprite->setTextDatum(BL_DATUM);  // baseline-left for alignment
+
+    // Vertically centre the speed in the available space between fuel label and bottom readouts
+    // Font 7 at size 2 = 96px tall. Font 4 = 26px tall for bottom row.
+    int speedHeight = 48 * CFG_SPEED_FONT_SIZE;  // Font 7 base height × size
+    int bottomRowHeight = 26 + 8;                  // Font 4 height + padding
+    int availableHeight = CFG_SCREEN_H - y - bottomRowHeight;
+    int speedY = y + (availableHeight + speedHeight) / 2;  // baseline Y for BL_DATUM
+
+    // Measure speed text width to position "km/h" to its right
+    int speedWidth = _sprite->textWidth(speedBuf);
+
+    // Measure "km/h" width in Font 4 at size 1
+    int gapWidth = 6;  // pixels between speed and "km/h"
+    _sprite->setTextSize(1);
+    _sprite->setTextFont(CFG_LABEL_FONT);
+    int kmhWidth = _sprite->textWidth("km/h");
+
+    int totalWidth = speedWidth + gapWidth + kmhWidth;
+    int startX = (CFG_SCREEN_W - totalWidth) / 2;
+
+    // Draw speed digits
+    _sprite->setTextFont(CFG_SPEED_FONT);
+    _sprite->setTextSize(CFG_SPEED_FONT_SIZE);
+    _sprite->setTextDatum(BL_DATUM);
+    _sprite->drawString(speedBuf, startX, speedY);
+
+    // Draw "km/h" at same baseline in Font 4
+    _sprite->setTextSize(1);
+    _sprite->setTextFont(CFG_LABEL_FONT);
+    _sprite->setTextDatum(BL_DATUM);
+    _sprite->drawString("km/h", startX + speedWidth + gapWidth, speedY);
+
+    // Return Y for bottom row
+    return CFG_SCREEN_H - bottomRowHeight;
+}
+
 void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
