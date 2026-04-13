@@ -160,6 +160,36 @@ int32_t GaugeDisplay::drawSpeed(int kph, int32_t y) {
     return CFG_SCREEN_H - bottomRowHeight;
 }
 
+int32_t GaugeDisplay::drawVoltage(float volts, int32_t y) {
+    if (!_sprite) return y;
+
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    _sprite->setTextFont(CFG_LABEL_FONT);
+    _sprite->setTextSize(1);
+    _sprite->setTextDatum(TL_DATUM);
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "VOLT://%.1fV", volts);
+    _sprite->drawString(buf, CFG_BAR_X, y);
+
+    return y + _sprite->fontHeight() + 4;
+}
+
+int32_t GaugeDisplay::drawCoolant(int tempC, int32_t y) {
+    if (!_sprite) return y;
+
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    _sprite->setTextFont(CFG_LABEL_FONT);
+    _sprite->setTextSize(1);
+    _sprite->setTextDatum(TR_DATUM);
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "TEMP://%d\xB0""C", tempC);
+    _sprite->drawString(buf, CFG_SCREEN_W - CFG_BAR_X, y);
+
+    return y + _sprite->fontHeight() + 4;
+}
+
 void GaugeDisplay::drawError(const char* msg) {
     if (!_sprite) return;
 
