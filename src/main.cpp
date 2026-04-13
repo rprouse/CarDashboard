@@ -55,8 +55,6 @@ void handleRunning() {
     switch (result) {
         case PollResult::SUCCESS:
             consecutiveErrors = 0;
-            // Draw the fuel gauge
-            display.drawGauge(obd.getFuelLevel(), CFG_FUELBAR_Y);
             break;
 
         case PollResult::ERROR:
@@ -65,6 +63,7 @@ void handleRunning() {
             Serial.println(consecutiveErrors);
             if (consecutiveErrors >= CFG_CONSECUTIVE_ERROR_THRESHOLD) {
                 enterState(AppState::ERROR);
+                return;
             }
             break;
 
@@ -72,10 +71,15 @@ void handleRunning() {
             break;
     }
 
-    // Redraw periodically for animations (pulse, flicker)
+    // Redraw periodically for animations (pulse, danger flash, scanlines)
     static unsigned long lastRedraw = 0;
-    if (obd.getFuelLevel() >= 0 && millis() - lastRedraw >= CFG_ANIM_INTERVAL_MS) {
-        display.drawGauge(obd.getFuelLevel(), CFG_FUELBAR_Y);
+    if (millis() - lastRedraw >= CFG_ANIM_INTERVAL_MS) {
+        display.beginFrame();
+        int32_t y = display.drawGauge(obd.getFuelLevel(), CFG_FUELBAR_Y);
+        y = display.drawSpeed(obd.getSpeed(), y);
+        display.drawVoltage(obd.getVoltage(), y);
+        display.drawCoolant(obd.getCoolantTemp(), y);
+        display.endFrame();
         lastRedraw = millis();
     }
 }
