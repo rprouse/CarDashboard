@@ -6,9 +6,12 @@ const char* const CFG_BT_PIN          = "1234";
 const char* const CFG_BT_LOCAL_NAME   = "FuelGauge";
 
 // ── Timing (ms) ─────────────────────────────────────────────
-constexpr unsigned long CFG_POLL_INTERVAL_MS   = 3000;
+constexpr unsigned long CFG_POLL_INTERVAL_MS   = 2000;
 constexpr unsigned long CFG_RECONNECT_DELAY_MS = 5000;
 constexpr unsigned long CFG_ELM_TIMEOUT_MS     = 5000;
+
+// ── OBD polling ─────────────────────────────────────────────
+constexpr int CFG_SLOW_PID_EVERY_N = 5;  // insert a slow PID every Nth poll cycle
 
 // ── Error handling ──────────────────────────────────────────
 constexpr int CFG_CONSECUTIVE_ERROR_THRESHOLD = 3;
@@ -24,6 +27,11 @@ constexpr int CFG_BAR_H       = 26;
 constexpr int CFG_BAR_PADDING = 2;   // border padding for inner fill
 
 constexpr int CFG_FUELBAR_Y   = 0;
+
+// ── Speed display ───────────────────────────────────────────
+constexpr int CFG_SPEED_FONT       = 7;   // 7-segment font for digits
+constexpr int CFG_SPEED_FONT_SIZE  = 2;   // text size multiplier (48px × 2 = 96px)
+constexpr int CFG_LABEL_FONT       = 4;   // font for km/h, voltage, coolant labels
 
 // ── Colours (RGB565) ────────────────────────────────────────
 constexpr uint16_t CFG_COLOR_CRT_GREEN = 0x37E6;  // #33FF33 — CRT phosphor green
