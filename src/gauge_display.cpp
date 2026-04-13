@@ -44,14 +44,23 @@ void GaugeDisplay::drawInitialising() {
     _sprite->pushSprite(0, 0);
 }
 
+void GaugeDisplay::beginFrame() {
+    if (!_sprite) return;
+    _sprite->fillSprite(TFT_BLACK);
+}
+
+void GaugeDisplay::endFrame() {
+    if (!_sprite) return;
+    applyCrtEffect();
+    _sprite->pushSprite(0, 0);
+}
+
 int32_t GaugeDisplay::drawGauge(float percent, int32_t y) {
     if (!_sprite) return y;
 
     // Clamp to 0-100
     if (percent < 0.0f)   percent = 0.0f;
     if (percent > 100.0f) percent = 100.0f;
-
-    _sprite->fillSprite(TFT_BLACK);
 
     uint16_t barColour = CFG_COLOR_BAR;
 
@@ -95,9 +104,6 @@ int32_t GaugeDisplay::drawGauge(float percent, int32_t y) {
     char labelBuf[18];
     snprintf(labelBuf, sizeof(labelBuf), "SYS://FUEL: %.0f%%", percent);
     _sprite->drawString(labelBuf, CFG_BAR_X, y);
-
-    applyCrtEffect();
-    _sprite->pushSprite(0, 0);
 
     return y + _sprite->fontHeight() + 4; // Return Y position below label for next element
 }
