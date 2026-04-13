@@ -17,11 +17,17 @@ bool OBDReader::initELM() {
 }
 
 ActivePid OBDReader::nextPid() {
-    // Every Nth cycle, poll a slow PID instead of speed
-    if (_cycleCount > 0 && _cycleCount % CFG_SLOW_PID_EVERY_N == 0) {
-        static const ActivePid slowPids[] = {
-            ActivePid::FUEL, ActivePid::COOLANT, ActivePid::VOLTAGE
-        };
+    static const ActivePid slowPids[] = {
+        ActivePid::FUEL, ActivePid::COOLANT, ActivePid::VOLTAGE
+    };
+
+    // First 3 cycles: poll each slow PID once to get initial values
+    if (_cycleCount < 3) {
+        return slowPids[_cycleCount];
+    }
+
+    // After init: every Nth cycle, poll a slow PID instead of speed
+    if (_cycleCount % CFG_SLOW_PID_EVERY_N == 0) {
         ActivePid pid = slowPids[_slowPidIndex];
         _slowPidIndex = (_slowPidIndex + 1) % 3;
         return pid;
