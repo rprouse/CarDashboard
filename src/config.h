@@ -52,10 +52,14 @@ constexpr int CFG_HUD_HEADER_Y     = 14;   // header text Y position
 constexpr int CFG_HUD_RULE_UPPER_Y = 28;   // horizontal rule below header
 constexpr int CFG_HUD_RULE_LOWER_Y = 148;  // horizontal rule above fuel label
 
-// ── Low fuel warning ────────────────────────────────────────
+// ── Danger thresholds & colour ──────────────────────────────
 constexpr int      CFG_THRESH_LOW_FUEL   = 20;    // below this: danger flash
-constexpr uint16_t CFG_COLOR_DANGER      = 0xC000; // dim red for low fuel flash
+constexpr uint16_t CFG_COLOR_DANGER      = 0xC000; // dim red for danger flash
 constexpr unsigned long CFG_DANGER_BLINK_MS = 500; // blink period
+
+constexpr float    CFG_THRESH_VOLT_LOW   = 12.0f;  // below this: danger flash
+constexpr float    CFG_THRESH_VOLT_HIGH  = 14.8f;  // above this: danger flash
+constexpr int      CFG_THRESH_COOLANT_HIGH = 110;   // above this: danger flash
 
 // ── Animation ───────────────────────────────────────────────
 constexpr unsigned long CFG_PULSE_PERIOD_MS = 2000; // bar glow cycle

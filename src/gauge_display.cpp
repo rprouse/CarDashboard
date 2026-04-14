@@ -163,7 +163,9 @@ int32_t GaugeDisplay::drawSpeed(int kph, int32_t y) {
 int32_t GaugeDisplay::drawVoltage(float volts, int32_t y) {
     if (!_sprite) return y;
 
-    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    bool danger = (volts < CFG_THRESH_VOLT_LOW || volts > CFG_THRESH_VOLT_HIGH);
+    bool flash  = danger && ((millis() / CFG_DANGER_BLINK_MS) % 2);
+    _sprite->setTextColor(flash ? CFG_COLOR_DANGER : CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(CFG_LABEL_FONT);
     _sprite->setTextSize(1);
     _sprite->setTextDatum(TL_DATUM);
@@ -178,7 +180,9 @@ int32_t GaugeDisplay::drawVoltage(float volts, int32_t y) {
 int32_t GaugeDisplay::drawCoolant(int tempC, int32_t y) {
     if (!_sprite) return y;
 
-    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    bool danger = (tempC > CFG_THRESH_COOLANT_HIGH);
+    bool flash  = danger && ((millis() / CFG_DANGER_BLINK_MS) % 2);
+    _sprite->setTextColor(flash ? CFG_COLOR_DANGER : CFG_COLOR_CRT_GREEN);
     _sprite->setTextFont(CFG_LABEL_FONT);
     _sprite->setTextSize(1);
     _sprite->setTextDatum(TR_DATUM);
