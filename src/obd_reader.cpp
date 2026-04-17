@@ -62,7 +62,7 @@ PollResult OBDReader::dispatchPid() {
             break;
         }
         case ActivePid::VOLTAGE: {
-            float val = _elm.ctrlModVoltage();
+            float val = _elm.batteryVoltage();
             if (_elm.nb_rx_state == ELM_SUCCESS) {
                 _voltage = val;
                 return PollResult::SUCCESS;
