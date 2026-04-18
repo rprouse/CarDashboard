@@ -16,6 +16,10 @@ constexpr unsigned long CFG_ELM_TIMEOUT_MS     = 5000;
 constexpr int CFG_SLOW_PID_EVERY_N = 10;  // insert a slow PID every Nth poll cycle (10 × 500ms = 5s)
 constexpr int CFG_FUELRATE_SMOOTH_SAMPLES = 5;  // rolling mean window for L/h display
 
+// MAF → fuel rate: L/h = MAF(g/s) × 3600 / (AFR × density g/L).
+// Gasoline: 3600/(14.7×820) = 0.2987. Diesel: 3600/(14.5×832) = 0.2984.
+constexpr float CFG_LPH_PER_MAF_GPS = 0.2987f;
+
 // ── Error handling ──────────────────────────────────────────
 constexpr int CFG_CONSECUTIVE_ERROR_THRESHOLD = 3;
 

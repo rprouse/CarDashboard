@@ -53,9 +53,10 @@ PollResult OBDReader::dispatchPid() {
             break;
         }
         case ActivePid::FUEL_RATE: {
-            float val = _elm.fuelRate();
+            float maf = _elm.mafRate();
             if (_elm.nb_rx_state == ELM_SUCCESS) {
-                _fuelRateBuf[_fuelRateBufIdx] = val;
+                float lph = maf * CFG_LPH_PER_MAF_GPS;
+                _fuelRateBuf[_fuelRateBufIdx] = lph;
                 _fuelRateBufIdx = (_fuelRateBufIdx + 1) % CFG_FUELRATE_SMOOTH_SAMPLES;
                 if (_fuelRateBufCount < CFG_FUELRATE_SMOOTH_SAMPLES) _fuelRateBufCount++;
                 return PollResult::SUCCESS;
