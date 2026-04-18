@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // ── Bluetooth ────────────────────────────────────────────────
 const char* const CFG_BT_DEVICE_NAME  = "OBDII";
 const char* const CFG_BT_PIN          = "1234";
@@ -12,6 +14,7 @@ constexpr unsigned long CFG_ELM_TIMEOUT_MS     = 5000;
 
 // ── OBD polling ─────────────────────────────────────────────
 constexpr int CFG_SLOW_PID_EVERY_N = 10;  // insert a slow PID every Nth poll cycle (10 × 500ms = 5s)
+constexpr int CFG_FUELRATE_SMOOTH_SAMPLES = 5;  // rolling mean window for L/h display
 
 // ── Error handling ──────────────────────────────────────────
 constexpr int CFG_CONSECUTIVE_ERROR_THRESHOLD = 3;
@@ -62,6 +65,4 @@ constexpr float    CFG_THRESH_VOLT_HIGH  = 14.8f;  // above this: danger flash
 constexpr int      CFG_THRESH_COOLANT_HIGH = 110;   // above this: danger flash
 
 // ── Animation ───────────────────────────────────────────────
-constexpr unsigned long CFG_PULSE_PERIOD_MS = 2000; // bar glow cycle
-constexpr int CFG_GLITCH_CHANCE     = 15;           // 1 in N frames triggers glitch
 constexpr unsigned long CFG_ANIM_INTERVAL_MS = 50;  // redraw interval for animations

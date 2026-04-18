@@ -20,19 +20,26 @@ ActivePid OBDReader::nextPid() {
     static const ActivePid slowPids[] = {
         ActivePid::FUEL, ActivePid::COOLANT, ActivePid::VOLTAGE
     };
+    static const ActivePid fastPids[] = {
+        ActivePid::SPEED, ActivePid::FUEL_RATE
+    };
 
     // First 3 cycles: poll each slow PID once to get initial values
     if (_cycleCount < 3) {
         return slowPids[_cycleCount];
     }
 
-    // After init: every Nth cycle, poll a slow PID instead of speed
+    // After init: every Nth cycle, poll a slow PID instead of a fast one
     if (_cycleCount % CFG_SLOW_PID_EVERY_N == 0) {
         ActivePid pid = slowPids[_slowPidIndex];
         _slowPidIndex = (_slowPidIndex + 1) % 3;
         return pid;
     }
-    return ActivePid::SPEED;
+
+    // Alternate fast PIDs (speed and fuel rate)
+    ActivePid pid = fastPids[_fastPidIndex];
+    _fastPidIndex = (_fastPidIndex + 1) % 2;
+    return pid;
 }
 
 PollResult OBDReader::dispatchPid() {
@@ -41,6 +48,16 @@ PollResult OBDReader::dispatchPid() {
             int32_t val = _elm.kph();
             if (_elm.nb_rx_state == ELM_SUCCESS) {
                 _speed = val;
+                return PollResult::SUCCESS;
+            }
+            break;
+        }
+        case ActivePid::FUEL_RATE: {
+            float val = _elm.fuelRate();
+            if (_elm.nb_rx_state == ELM_SUCCESS) {
+                _fuelRateBuf[_fuelRateBufIdx] = val;
+                _fuelRateBufIdx = (_fuelRateBufIdx + 1) % CFG_FUELRATE_SMOOTH_SAMPLES;
+                if (_fuelRateBufCount < CFG_FUELRATE_SMOOTH_SAMPLES) _fuelRateBufCount++;
                 return PollResult::SUCCESS;
             }
             break;
@@ -114,6 +131,13 @@ int OBDReader::getCoolantTemp() {
 
 float OBDReader::getVoltage() {
     return _voltage;
+}
+
+float OBDReader::getFuelRate() {
+    if (_fuelRateBufCount == 0) return -1.0f;
+    float sum = 0.0f;
+    for (int i = 0; i < _fuelRateBufCount; i++) sum += _fuelRateBuf[i];
+    return sum / _fuelRateBufCount;
 }
 
 bool OBDReader::isConnected() {

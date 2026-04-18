@@ -78,6 +78,7 @@ void handleRunning() {
         int32_t y = display.drawGauge(obd.getFuelLevel(), CFG_FUELBAR_Y);
         y = display.drawSpeed(obd.getSpeed(), y);
         display.drawVoltage(obd.getVoltage(), y);
+        display.drawFuelRate(obd.getFuelRate(), y);
         display.drawCoolant(obd.getCoolantTemp(), y);
         display.endFrame();
         lastRedraw = millis();

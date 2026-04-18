@@ -177,6 +177,25 @@ int32_t GaugeDisplay::drawVoltage(float volts, int32_t y) {
     return y + _sprite->fontHeight() + 4;
 }
 
+int32_t GaugeDisplay::drawFuelRate(float lph, int32_t y) {
+    if (!_sprite) return y;
+
+    _sprite->setTextColor(CFG_COLOR_CRT_GREEN);
+    _sprite->setTextFont(CFG_LABEL_FONT);
+    _sprite->setTextSize(1);
+    _sprite->setTextDatum(TC_DATUM);
+
+    char buf[16];
+    if (lph < 0.0f) {
+        snprintf(buf, sizeof(buf), "-- L/h");
+    } else {
+        snprintf(buf, sizeof(buf), "%.1fL/h", lph);
+    }
+    _sprite->drawString(buf, CFG_SCREEN_W / 2, y);
+
+    return y + _sprite->fontHeight() + 4;
+}
+
 int32_t GaugeDisplay::drawCoolant(int tempC, int32_t y) {
     if (!_sprite) return y;
 

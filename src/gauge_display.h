@@ -15,6 +15,7 @@ public:
     int32_t drawSpeed(int kph, int32_t y);
     int32_t drawVoltage(float volts, int32_t y);
     int32_t drawCoolant(int tempC, int32_t y);
+    int32_t drawFuelRate(float lph, int32_t y);
 
     // Self-contained screens (own their full pipeline)
     void drawConnecting();
